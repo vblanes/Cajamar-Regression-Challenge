@@ -20,28 +20,12 @@ def GBR():
     # model
     clf = ensemble.GradientBoostingRegressor(**params)
     # cross validation
-    '''
-    scores = cross_val_score(GBR, data, labels, cv=10, n_jobs=-1)
+    scores = cross_val_score(clf, data, labels, cv=10, n_jobs=-1, scoring='neg_mean_squared_error')
     print(scores)
     print('-------------------------------------------------------------')
-    print('Desviacion absoluta:', str(scores.mean()),  str(scores.std()) )
-    '''
-    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.25)
-    clf.fit(X_train, y_train)
-    predicted = clf.predict(X_test)
-    return mse(y_test, predicted), clf.feature_importances_
+    print('MSE:', str(scores.mean()),  str(scores.std()) )
+
 
 
 if __name__ == '__main__':
-    mses = []
-    imps = []
-    for _ in range(10):
-        m, v = GBR()
-        mses.append(m)
-        imps.append(v)
-    print('mse', str(mean(mses)))
-    data, _ = load_data()
-    data = data.columns.values
-    imps = sum(imps)/len(mses)
-    for i, cl in enumerate(data):
-        print(cl, ';', imps[i])
+    GBR()

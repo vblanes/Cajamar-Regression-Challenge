@@ -10,14 +10,17 @@ from utils import *
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import make_scorer
 #
+'''
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.wrappers.scikit_learn import KerasRegressor
+'''
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 # para fully-conected
+'''
 import keras
 from keras.models import Sequential
 from keras.layers.normalization import BatchNormalization as BN
@@ -26,22 +29,43 @@ from keras.layers import GaussianNoise as GN
 import os
 import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+'''
+
+def prob():
+    print('Loading data...')
+    data, labels = load_data()
+    # params
+    params = { 'min_samples_split': 2, 'loss': 'lad' }
+    # model
+    clf = ensemble.GradientBoostingRegressor(**params)
+
+    print('spliting...')
+    X_train, X_test, y_train, y_test = train_test_split( data, labels, test_size=0.25, random_state=42)
+
+    print('Entrenando...')
+    clf.fit(X_train, y_train)
+    score = clf.score(X_test, y_test)
+    print(str(score))
 
 
 def GBR():
     '''
     Create and evaluate the GradientBoostingRegressor
     '''
+    print('Loading data...')
     data, labels = load_data()
     # params
-    params = { 'min_samples_split': 2, 'loss': 'ls', }
+    params = { 'min_samples_split': 2, 'loss': 'lad' }
     # model
     clf = ensemble.GradientBoostingRegressor(**params)
     # cross validation
-    scores = cross_val_score(clf, data, labels, cv=10, n_jobs=-1, scoring=make_scorer(score_func=mse, greater_is_better=True))
+    #scores = cross_val_score(clf, data, labels, cv=10, n_jobs=-1, scoring=make_scorer(score_func=mse, greater_is_better=True))
+    print('Cross validation...')
+    #scores = cross_val_score(clf, data, labels, cv=10, n_jobs=5, scoring='neg_mean_absolute_error')
+    scores = cross_val_score(clf, data, labels, cv=10, n_jobs=5, scoring='neg_median_absolute_error')
     print(scores)
     print('-------------------------------------------------------------')
-    print('MSE:', str(scores.mean()),  str(scores.std()) )
+    print('DMA:', str(scores.mean()),  str(scores.std()) )
 
 
 def model_keras():
@@ -108,4 +132,6 @@ if __name__ == '__main__':
     results = cross_val_score(pipeline, X, y, cv=10, n_jobs=-1, scoring=make_scorer(score_func=mse, greater_is_better=True))
     print("Larger: %.2f (%.2f) MSE" % (results.mean(), results.std()))
     '''
-    GBR_60k()
+    #GBR_60k()
+    GBR()
+    #prob()

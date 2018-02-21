@@ -5,47 +5,36 @@ from sklearn.metrics import mean_squared_error as mse
 from statistics import mean
 
 from sklearn.model_selection import cross_val_score
-# utility self library
-from utils import *
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import make_scorer
-#
-'''
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.wrappers.scikit_learn import KerasRegressor
-'''
+
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from sklearn.svm import SVR
+from sklearn.linear_model import SGDRegressor, Ridge, Lasso, ElasticNet
 # para fully-conected
-'''
+
 import keras
 from keras.models import Sequential
 from keras.layers.normalization import BatchNormalization as BN
-from keras.layers import Dense, Dropout, Activation, Flatten
+from keras.layers import Dense, Dropout, Activation
 from keras.layers import GaussianNoise as GN
+from keras.wrappers.scikit_learn import KerasRegressor
+
 import os
 import tensorflow as tf
+
+# utility self library
+from utils import *
+# warning supressor
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+
 '''
-
-def prob():
-    print('Loading data...')
-    data, labels = load_data()
-    # params
-    params = { 'min_samples_split': 2, 'loss': 'lad' }
-    # model
-    clf = ensemble.GradientBoostingRegressor(**params)
-
-    print('spliting...')
-    X_train, X_test, y_train, y_test = train_test_split( data, labels, test_size=0.25, random_state=42)
-
-    print('Entrenando...')
-    clf.fit(X_train, y_train)
-    score = clf.score(X_test, y_test)
-    print(str(score))
+MODELS FOR TEST
+'''
 
 
 def GBR():
@@ -55,7 +44,7 @@ def GBR():
     print('Loading data...')
     data, labels = load_data()
     # params
-    params = { 'min_samples_split': 2, 'loss': 'lad' }
+    params = { 'min_samples_split': 2, 'loss': 'ls' }
     # model
     clf = ensemble.GradientBoostingRegressor(**params)
     # cross validation
@@ -117,6 +106,103 @@ def GBR_60k():
     print('MSE:', str(scores.mean()),  str(scores.std()) )
 
 
+def SVReg():
+    '''
+    Create and evaluate the GradientBoostingRegressor
+    '''
+    data, labels = load_data()
+    # delete the register above 60k
+    # params
+    #params = { 'min_samples_split': 2, 'loss': 'ls', }
+    # model
+    clf = SVR()
+    # cross validation
+    scores = cross_val_score(clf, data, labels, cv=10, n_jobs=-1, scoring=make_scorer(score_func=mse, greater_is_better=True))
+    print(scores)
+    print('-------------------------------------------------------------')
+    print('MSE:', str(scores.mean()),  str(scores.std()) )
+
+
+def SGDReg():
+    data, labels = load_data()
+    # delete the register above 60k
+    # params
+    params = { 'penalty': 'l2', 'loss': 'huber' }
+    # model
+    clf = SGDRegressor(**params)
+    # cross validation
+    scores = cross_val_score(clf, data, labels, cv=10, n_jobs=-1, scoring=make_scorer(score_func=mse, greater_is_better=True))
+    print(scores)
+    print('-------------------------------------------------------------')
+    print('MSE:', str(scores.mean()),  str(scores.std()) )
+
+def RidgeReg():
+    data, labels = load_data()
+    # delete the register above 60k
+    # params
+    # model
+    clf = Ridge()
+    # cross validation
+    scores = cross_val_score(clf, data, labels, cv=10, n_jobs=-1, scoring=make_scorer(score_func=mse, greater_is_better=True))
+    print(scores)
+    print('-------------------------------------------------------------')
+    print('MSE:', str(scores.mean()),  str(scores.std()) )
+
+def LassoReg():
+    data, labels = load_data()
+    # model
+    clf = Lasso()
+    # cross validation
+    scores = cross_val_score(clf, data, labels, cv=10, n_jobs=-1, scoring=make_scorer(score_func=mse, greater_is_better=True))
+    print(scores)
+    print('-------------------------------------------------------------')
+    print('MSE:', str(scores.mean()),  str(scores.std()) )
+
+def ElasticNetReg():
+    data, labels = load_data()
+    # model
+    clf = ElasticNet()
+    # cross validation
+    scores = cross_val_score(clf, data, labels, cv=10, n_jobs=-1, scoring=make_scorer(score_func=mse, greater_is_better=True))
+    print(scores)
+    print('-------------------------------------------------------------')
+    print('MSE:', str(scores.mean()),  str(scores.std()) )
+
+
+def build_solution():
+    '''
+    This method provides the final solution
+    '''
+    # load train data
+    data, labels = load_data()
+    # params
+    params = { 'max_depth': 4, 'loss': 'ls' }
+    # model
+    clf = ensemble.GradientBoostingRegressor(**params)
+    # fit the model
+    clf.fit(data, labels)
+    # free space
+    del data
+    # load test
+    test = pd.read_csv('TEST.txt', sep=",")
+    test['Socio_Demo_01'] = factorization(test['Socio_Demo_01'])
+    ids = test['ID_Customer']
+    del test['ID_Customer']
+    # predict
+    predictions = clf.predict(test)
+    # create the resulting dataframe
+    res = pd.DataFrame()
+    res['ID_Customer'] = ids
+    res['PA_Est'] = predictions
+    # store it!
+    res.to_csv('Test_Mission.txt', sep=',')
+
+
+
+
+
+
+
 if __name__ == '__main__':
     '''
     # seed
@@ -132,6 +218,7 @@ if __name__ == '__main__':
     results = cross_val_score(pipeline, X, y, cv=10, n_jobs=-1, scoring=make_scorer(score_func=mse, greater_is_better=True))
     print("Larger: %.2f (%.2f) MSE" % (results.mean(), results.std()))
     '''
-    #GBR_60k()
-    GBR()
-    #prob()
+
+    func = build_solution
+    print(func)
+    func()

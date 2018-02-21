@@ -28,4 +28,4 @@ def load_data():
     del data['Poder_Adquisitivo']
 
     data['Socio_Demo_01'] = factorization(data['Socio_Demo_01'])
-    return data, labels
+    return data, labels 
